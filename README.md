@@ -25,14 +25,28 @@ pip install -r requirements.txt
 
 ## 사용법
 
+### 명령줄 버전
+
 ```bash
-python web_scraper.py <URL>
+python3 web_scraper.py <URL>
 ```
 
 예시:
 ```bash
-python web_scraper.py "https://r.yongsanyouthtown.or.kr/modules/board/bd_view.html?no=132&id=apply&p=1&or=bd_order&al=asc"
+python3 web_scraper.py "https://r.yongsanyouthtown.or.kr/modules/board/bd_view.html?no=132&id=apply&p=1&or=bd_order&al=asc"
 ```
+
+### GUI 버전
+
+```bash
+python3 web_scraper_gui.py
+```
+
+GUI 버전에서는:
+1. URL을 입력창에 입력
+2. "스크래핑 시작" 버튼 클릭
+3. 결과를 화면에서 확인
+4. "결과 폴더 열기" 버튼으로 저장된 파일 확인
 
 ## 출력 파일
 
