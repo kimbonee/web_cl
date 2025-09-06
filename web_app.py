@@ -50,30 +50,46 @@ class WebScraper:
         
     def create_folder(self, folder_name):
         """데스크탑에 폴더 생성"""
-        desktop_path = Path.home() / "Desktop"
-        folder_path = desktop_path / folder_name
+        # 여러 경로 시도
+        possible_paths = [
+            Path.home() / "Desktop",
+            Path.home() / "Desktop" / "Downloads",
+            Path.cwd() / "downloads",
+            Path("/tmp") / "web_scraper_downloads"
+        ]
         
-        print(f"폴더 생성 시도: {folder_path}")
+        for base_path in possible_paths:
+            try:
+                folder_path = base_path / folder_name
+                print(f"폴더 생성 시도: {folder_path}")
+                
+                # 폴더 생성
+                folder_path.mkdir(parents=True, exist_ok=True)
+                print(f"폴더 생성 성공: {folder_path}")
+                
+                # images 하위 폴더도 생성
+                images_folder = folder_path / "images"
+                images_folder.mkdir(exist_ok=True)
+                print(f"images 폴더 생성: {images_folder}")
+                
+                # 폴더가 실제로 생성되었는지 확인
+                if folder_path.exists() and images_folder.exists():
+                    print(f"폴더 생성 확인 완료: {folder_path}")
+                    return folder_path
+                else:
+                    print(f"폴더 생성 실패 - 존재하지 않음: {folder_path}")
+                    continue
+                    
+            except Exception as e:
+                print(f"폴더 생성 실패 ({base_path}): {e}")
+                continue
         
-        try:
-            folder_path.mkdir(parents=True, exist_ok=True)
-            print(f"폴더 생성 성공: {folder_path}")
-            
-            # images 하위 폴더도 생성
-            images_folder = folder_path / "images"
-            images_folder.mkdir(exist_ok=True)
-            print(f"images 폴더 생성: {images_folder}")
-            
-        except Exception as e:
-            print(f"폴더 생성 실패: {e}")
-            # 대안 경로 시도
-            alternative_path = Path.cwd() / "downloads" / folder_name
-            alternative_path.mkdir(parents=True, exist_ok=True)
-            (alternative_path / "images").mkdir(exist_ok=True)
-            print(f"대안 경로로 폴더 생성: {alternative_path}")
-            return alternative_path
-        
-        return folder_path
+        # 모든 경로 실패 시 현재 디렉토리 사용
+        fallback_path = Path.cwd() / "downloads" / folder_name
+        fallback_path.mkdir(parents=True, exist_ok=True)
+        (fallback_path / "images").mkdir(exist_ok=True)
+        print(f"최종 대안 경로로 폴더 생성: {fallback_path}")
+        return fallback_path
     
     def download_image(self, img_url, folder_path, img_name):
         """이미지 다운로드"""
