@@ -262,6 +262,18 @@ def scrape():
     else:
         scraper = WebScraper(url)
         result = scraper.scrape_page(url)
+        
+        # 일반 방법이 실패하면 자동으로 Selenium 시도
+        if not result['success'] and 'ConnectTimeoutError' in str(result.get('error', '')):
+            try:
+                from web_scraper_selenium import SeleniumWebScraper
+                print("일반 방법 실패, Selenium으로 재시도...")
+                selenium_scraper = SeleniumWebScraper(url)
+                result = selenium_scraper.scrape_page(url)
+                if result['success']:
+                    result['method'] = 'selenium_auto_fallback'
+            except ImportError:
+                pass  # Selenium이 없으면 원래 오류 반환
     
     return jsonify(result)
 

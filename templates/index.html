@@ -237,6 +237,28 @@
         .checkmark {
             margin-left: 5px;
         }
+        
+        .image-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        
+        .image-icon {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .image-text {
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -351,10 +373,24 @@
                 const imageItem = document.createElement('div');
                 imageItem.className = 'image-item';
                 
+                // 스크린샷인 경우 특별한 표시
+                const isScreenshot = img.original_url === 'page_screenshot';
+                const displayText = isScreenshot ? '📸 페이지 스크린샷' : `이미지 ${index + 1}`;
+                const icon = isScreenshot ? '📸' : '🖼️';
+                
                 imageItem.innerHTML = `
-                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2Y4ZjlmYSIvPjx0ZXh0IHg9IjUwIiB5PSI1MCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEyIiBmaWxsPSIjNjY2IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+SW1hZ2Ug${index + 1}</text></svg>" alt="Image ${index + 1}">
-                    <p>${img.alt_text || `이미지 ${index + 1}`}</p>
+                    <div class="image-placeholder">
+                        <div class="image-icon">${icon}</div>
+                        <div class="image-text">${displayText}</div>
+                    </div>
+                    <p>${img.alt_text || displayText}</p>
                 `;
+                
+                // 스크린샷인 경우 특별한 스타일 적용
+                if (isScreenshot) {
+                    imageItem.style.border = '2px solid #4facfe';
+                    imageItem.style.backgroundColor = '#e3f2fd';
+                }
                 
                 imageList.appendChild(imageItem);
             });

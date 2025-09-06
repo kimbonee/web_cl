@@ -182,6 +182,15 @@ class SeleniumWebScraper:
             with open(md_file, 'w', encoding='utf-8') as f:
                 f.write(styled_text)
             
+            # 페이지 전체 스크린샷 캡처
+            screenshot_path = folder_path / "page_screenshot.png"
+            try:
+                self.driver.save_screenshot(str(screenshot_path))
+                print(f"페이지 스크린샷 저장: {screenshot_path}")
+            except Exception as e:
+                print(f"스크린샷 저장 실패: {e}")
+                screenshot_path = None
+            
             # 이미지 추출 및 다운로드
             images = self.driver.find_elements(By.TAG_NAME, "img")
             image_info = []
@@ -201,6 +210,14 @@ class SeleniumWebScraper:
                 except Exception as e:
                     print(f"이미지 처리 오류: {e}")
                     continue
+            
+            # 스크린샷 정보 추가
+            if screenshot_path:
+                image_info.append({
+                    'original_url': 'page_screenshot',
+                    'local_path': str(screenshot_path),
+                    'alt_text': '페이지 전체 스크린샷'
+                })
             
             # 메타데이터 저장
             metadata = {
