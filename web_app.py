@@ -131,9 +131,14 @@ class WebScraper:
             print(f"이미지 다운로드 실패: {img_url} - {e}")
             return None
     
-    def extract_text_with_styling(self, soup):
+    def extract_text_with_styling(self, soup, url=None):
         """텍스트를 스타일과 함께 추출"""
         styled_text = []
+        
+        # URL 정보 추가
+        if url:
+            styled_text.append(f"**원본 URL**: {url}")
+            styled_text.append("")
         
         # 제목 추출
         title = soup.find('h1') or soup.find('h2') or soup.find('h3')
@@ -196,7 +201,7 @@ class WebScraper:
             folder_path = self.create_folder(folder_name)
             
             # 텍스트 정보 추출
-            styled_text = self.extract_text_with_styling(soup)
+            styled_text = self.extract_text_with_styling(soup, url)
             
             # 텍스트 파일로 저장
             text_file = folder_path / "content.txt"

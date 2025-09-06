@@ -126,12 +126,17 @@ class SeleniumWebScraper:
             print(f"이미지 다운로드 실패: {img_url} - {e}")
             return None
     
-    def extract_text_with_styling(self, page_source):
+    def extract_text_with_styling(self, page_source, url=None):
         """페이지 소스에서 텍스트 추출"""
         from bs4 import BeautifulSoup
         
         soup = BeautifulSoup(page_source, 'html.parser')
         styled_text = []
+        
+        # URL 정보 추가
+        if url:
+            styled_text.append(f"**원본 URL**: {url}")
+            styled_text.append("")
         
         # 제목 추출
         title = soup.find('h1') or soup.find('h2') or soup.find('h3')
@@ -208,7 +213,7 @@ class SeleniumWebScraper:
             page_source = self.driver.page_source
             
             # 텍스트 정보 추출
-            styled_text = self.extract_text_with_styling(page_source)
+            styled_text = self.extract_text_with_styling(page_source, url)
             
             # 텍스트 파일로 저장
             text_file = folder_path / "content.txt"
