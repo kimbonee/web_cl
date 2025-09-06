@@ -259,6 +259,26 @@
             color: #666;
             text-align: center;
         }
+        
+        .image-container {
+            position: relative;
+            height: 100px;
+            overflow: hidden;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        
+        .actual-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 5px;
+        }
+        
+        .actual-image:hover {
+            transform: scale(1.05);
+            transition: transform 0.2s;
+        }
     </style>
 </head>
 <body>
@@ -378,13 +398,33 @@
                 const displayText = isScreenshot ? '📸 페이지 스크린샷' : `이미지 ${index + 1}`;
                 const icon = isScreenshot ? '📸' : '🖼️';
                 
-                imageItem.innerHTML = `
-                    <div class="image-placeholder">
-                        <div class="image-icon">${icon}</div>
-                        <div class="image-text">${displayText}</div>
-                    </div>
-                    <p>${img.alt_text || displayText}</p>
-                `;
+                // 실제 이미지 표시 시도
+                if (img.local_path) {
+                    // 파일명만 추출
+                    const filename = img.local_path.split('/').pop();
+                    imageItem.innerHTML = `
+                        <div class="image-container">
+                            <img src="/image/${filename}" 
+                                 alt="${img.alt_text || displayText}" 
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                                 class="actual-image" />
+                            <div class="image-placeholder" style="display: none;">
+                                <div class="image-icon">${icon}</div>
+                                <div class="image-text">${displayText}</div>
+                            </div>
+                        </div>
+                        <p>${img.alt_text || displayText}</p>
+                    `;
+                } else {
+                    // 로컬 경로가 없으면 플레이스홀더 표시
+                    imageItem.innerHTML = `
+                        <div class="image-placeholder">
+                            <div class="image-icon">${icon}</div>
+                            <div class="image-text">${displayText}</div>
+                        </div>
+                        <p>${img.alt_text || displayText}</p>
+                    `;
+                }
                 
                 // 스크린샷인 경우 특별한 스타일 적용
                 if (isScreenshot) {

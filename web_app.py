@@ -276,6 +276,24 @@ class WebScraper:
 def index():
     return render_template('index.html')
 
+@app.route('/image/<path:filename>')
+def serve_image(filename):
+    """이미지 파일 서빙"""
+    try:
+        # 데스크탑에서 이미지 파일 찾기
+        desktop_path = Path.home() / "Desktop"
+        
+        # 모든 하위 폴더에서 이미지 파일 검색
+        for folder in desktop_path.glob("*"):
+            if folder.is_dir():
+                image_path = folder / "images" / filename
+                if image_path.exists():
+                    return send_file(str(image_path))
+        
+        return "이미지를 찾을 수 없습니다.", 404
+    except Exception as e:
+        return f"이미지 로드 오류: {str(e)}", 500
+
 @app.route('/scrape', methods=['POST'])
 def scrape():
     url = request.json.get('url', '').strip()
