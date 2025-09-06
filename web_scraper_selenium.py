@@ -46,8 +46,25 @@ class SeleniumWebScraper:
         desktop_path = Path.home() / "Desktop"
         folder_path = desktop_path / folder_name
         
-        if not folder_path.exists():
+        print(f"폴더 생성 시도: {folder_path}")
+        
+        try:
             folder_path.mkdir(parents=True, exist_ok=True)
+            print(f"폴더 생성 성공: {folder_path}")
+            
+            # images 하위 폴더도 생성
+            images_folder = folder_path / "images"
+            images_folder.mkdir(exist_ok=True)
+            print(f"images 폴더 생성: {images_folder}")
+            
+        except Exception as e:
+            print(f"폴더 생성 실패: {e}")
+            # 대안 경로 시도
+            alternative_path = Path.cwd() / "downloads" / folder_name
+            alternative_path.mkdir(parents=True, exist_ok=True)
+            (alternative_path / "images").mkdir(exist_ok=True)
+            print(f"대안 경로로 폴더 생성: {alternative_path}")
+            return alternative_path
         
         return folder_path
     
@@ -103,8 +120,11 @@ class SeleniumWebScraper:
             filename = f"{safe_name}{file_ext}"
             file_path = folder_path / "images" / filename
             
-            # images 폴더 생성
-            (folder_path / "images").mkdir(exist_ok=True)
+            # images 폴더 생성 확인
+            images_folder = folder_path / "images"
+            if not images_folder.exists():
+                images_folder.mkdir(parents=True, exist_ok=True)
+                print(f"images 폴더 생성: {images_folder}")
             
             # 이미지 데이터 저장
             with open(file_path, 'wb') as f:
