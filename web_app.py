@@ -15,6 +15,8 @@ from datetime import datetime
 from pathlib import Path
 import threading
 import time
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
 
 app = Flask(__name__)
 
@@ -22,9 +24,29 @@ class WebScraper:
     def __init__(self, base_url):
         self.base_url = base_url
         self.session = requests.Session()
+        
+        # 재시도 전략 설정
+        retry_strategy = Retry(
+            total=3,
+            backoff_factor=1,
+            status_forcelist=[429, 500, 502, 503, 504],
+            allowed_methods=["HEAD", "GET", "OPTIONS"]
+        )
+        
+        adapter = HTTPAdapter(max_retries=retry_strategy)
+        self.session.mount("http://", adapter)
+        self.session.mount("https://", adapter)
+        
         self.session.headers.update({
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language': 'ko-KR,ko;q=0.9,en;q=0.8',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1'
         })
+        # 타임아웃 설정 조정
+        self.timeout = (5, 15)  # (연결 타임아웃, 읽기 타임아웃)
         
     def create_folder(self, folder_name):
         """데스크탑에 폴더 생성"""
@@ -45,7 +67,7 @@ class WebScraper:
             elif img_url.startswith('/'):
                 img_url = urljoin(self.base_url, img_url)
             
-            response = self.session.get(img_url, timeout=30)
+            response = self.session.get(img_url, timeout=self.timeout)
             response.raise_for_status()
             
             # 파일 확장자 추출
@@ -110,7 +132,12 @@ class WebScraper:
     def scrape_page(self, url):
         """웹페이지 스크래핑"""
         try:
-            response = self.session.get(url, timeout=30)
+            # URL 검증 및 정규화
+            if not url.startswith(('http://', 'https://')):
+                url = 'https://' + url
+            
+            print(f"요청 URL: {url}")
+            response = self.session.get(url, timeout=self.timeout)
             response.raise_for_status()
             
             soup = BeautifulSoup(response.content, 'html.parser')
@@ -181,10 +208,30 @@ class WebScraper:
                 'images': image_info
             }
             
+        except requests.exceptions.ConnectTimeout:
+            return {
+                'success': False,
+                'error': '연결 시간 초과: 서버에 연결할 수 없습니다. 네트워크 연결을 확인하거나 잠시 후 다시 시도해주세요.'
+            }
+        except requests.exceptions.ReadTimeout:
+            return {
+                'success': False,
+                'error': '읽기 시간 초과: 서버 응답이 너무 느립니다. 잠시 후 다시 시도해주세요.'
+            }
+        except requests.exceptions.ConnectionError:
+            return {
+                'success': False,
+                'error': '연결 오류: 서버에 연결할 수 없습니다. URL을 확인하거나 네트워크 연결을 점검해주세요.'
+            }
+        except requests.exceptions.HTTPError as e:
+            return {
+                'success': False,
+                'error': f'HTTP 오류 ({e.response.status_code}): {e.response.reason}'
+            }
         except Exception as e:
             return {
                 'success': False,
-                'error': str(e)
+                'error': f'알 수 없는 오류: {str(e)}'
             }
 
 @app.route('/')
