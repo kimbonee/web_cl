@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>웹페이지 스크래핑 도구</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .input-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .url-input {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        .url-input:focus {
+            outline: none;
+            border-color: #4facfe;
+        }
+        
+        .scrape-btn {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .scrape-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .scrape-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .status {
+            text-align: center;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        
+        .status.loading {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .result-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .result-content {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            border-left: 4px solid #4facfe;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            line-height: 1.6;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .image-info {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .image-info h3 {
+            color: #1976d2;
+            margin-bottom: 15px;
+        }
+        
+        .image-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .image-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .image-item img {
+            max-width: 100%;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        
+        .image-item p {
+            font-size: 12px;
+            color: #666;
+            word-break: break-all;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #4facfe;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .copy-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+        
+        .copy-btn:hover {
+            background: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌐 웹페이지 스크래핑 도구</h1>
+            <p>URL을 입력하고 "불러오기" 버튼을 클릭하여 웹페이지의 내용과 이미지를 추출하세요</p>
+        </div>
+        
+        <div class="content">
+            <div class="input-section">
+                <div class="input-group">
+                    <input type="text" id="urlInput" class="url-input" placeholder="웹페이지 URL을 입력하세요 (예: https://example.com)" />
+                    <button id="scrapeBtn" class="scrape-btn">불러오기</button>
+                </div>
+                <div id="status" class="status hidden"></div>
+            </div>
+            
+            <div id="resultSection" class="result-section hidden">
+                <h2>📄 추출된 내용</h2>
+                <div id="resultContent" class="result-content"></div>
+                <button id="copyBtn" class="copy-btn">📋 내용 복사</button>
+            </div>
+            
+            <div id="imageSection" class="image-info hidden">
+                <h3>🖼️ 다운로드된 이미지</h3>
+                <div id="imageList" class="image-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const urlInput = document.getElementById('urlInput');
+        const scrapeBtn = document.getElementById('scrapeBtn');
+        const status = document.getElementById('status');
+        const resultSection = document.getElementById('resultSection');
+        const resultContent = document.getElementById('resultContent');
+        const imageSection = document.getElementById('imageSection');
+        const imageList = document.getElementById('imageList');
+        const copyBtn = document.getElementById('copyBtn');
+
+        scrapeBtn.addEventListener('click', async () => {
+            const url = urlInput.value.trim();
+            
+            if (!url) {
+                showStatus('URL을 입력해주세요.', 'error');
+                return;
+            }
+
+            // UI 상태 변경
+            scrapeBtn.disabled = true;
+            scrapeBtn.innerHTML = '<span class="loading-spinner"></span>불러오는 중...';
+            showStatus('웹페이지를 불러오는 중...', 'loading');
+            
+            // 결과 섹션 숨기기
+            resultSection.classList.add('hidden');
+            imageSection.classList.add('hidden');
+
+            try {
+                const response = await fetch('/scrape', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ url: url })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showStatus(`성공! ${data.image_count}개의 이미지와 함께 데스크탑에 저장되었습니다.`, 'success');
+                    
+                    // 결과 표시
+                    resultContent.textContent = data.text_content;
+                    resultSection.classList.remove('hidden');
+                    
+                    // 이미지 정보 표시
+                    if (data.images && data.images.length > 0) {
+                        displayImages(data.images);
+                        imageSection.classList.remove('hidden');
+                    }
+                } else {
+                    showStatus(`오류: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                showStatus(`오류: ${error.message}`, 'error');
+            } finally {
+                // UI 상태 복원
+                scrapeBtn.disabled = false;
+                scrapeBtn.innerHTML = '불러오기';
+            }
+        });
+
+        function showStatus(message, type) {
+            status.textContent = message;
+            status.className = `status ${type}`;
+            status.classList.remove('hidden');
+        }
+
+        function displayImages(images) {
+            imageList.innerHTML = '';
+            
+            images.forEach((img, index) => {
+                const imageItem = document.createElement('div');
+                imageItem.className = 'image-item';
+                
+                imageItem.innerHTML = `
+                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2Y4ZjlmYSIvPjx0ZXh0IHg9IjUwIiB5PSI1MCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEyIiBmaWxsPSIjNjY2IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+SW1hZ2Ug${index + 1}</text></svg>" alt="Image ${index + 1}">
+                    <p>${img.alt_text || `이미지 ${index + 1}`}</p>
+                `;
+                
+                imageList.appendChild(imageItem);
+            });
+        }
+
+        copyBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(resultContent.textContent).then(() => {
+                copyBtn.textContent = '✅ 복사 완료!';
+                setTimeout(() => {
+                    copyBtn.textContent = '📋 내용 복사';
+                }, 2000);
+            }).catch(err => {
+                console.error('복사 실패:', err);
+                copyBtn.textContent = '❌ 복사 실패';
+                setTimeout(() => {
+                    copyBtn.textContent = '📋 내용 복사';
+                }, 2000);
+            });
+        });
+
+        // Enter 키로 실행
+        urlInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                scrapeBtn.click();
+            }
+        });
+    </script>
+</body>
+</html>
