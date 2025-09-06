@@ -61,15 +61,42 @@ class SeleniumWebScraper:
                 img_url = 'https:' + img_url
             elif img_url.startswith('/'):
                 img_url = urljoin(self.base_url, img_url)
+            elif not img_url.startswith(('http://', 'https://')):
+                img_url = urljoin(self.base_url, '/' + img_url.lstrip('/'))
             
-            response = requests.get(img_url, timeout=10)
+            print(f"이미지 다운로드 시도: {img_url}")
+            
+            # 세션 생성 및 헤더 설정
+            session = requests.Session()
+            session.headers.update({
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                'Accept': 'image/webp,image/apng,image/*,*/*;q=0.8',
+                'Accept-Language': 'ko-KR,ko;q=0.9,en;q=0.8',
+                'Referer': self.base_url
+            })
+            
+            response = session.get(img_url, timeout=15, stream=True)
             response.raise_for_status()
             
-            # 파일 확장자 추출
-            parsed_url = urlparse(img_url)
-            file_ext = os.path.splitext(parsed_url.path)[1]
-            if not file_ext:
+            # Content-Type 확인
+            content_type = response.headers.get('content-type', '')
+            print(f"Content-Type: {content_type}")
+            
+            # 파일 확장자 결정
+            if 'image/jpeg' in content_type or 'image/jpg' in content_type:
                 file_ext = '.jpg'
+            elif 'image/png' in content_type:
+                file_ext = '.png'
+            elif 'image/gif' in content_type:
+                file_ext = '.gif'
+            elif 'image/webp' in content_type:
+                file_ext = '.webp'
+            else:
+                # URL에서 확장자 추출
+                parsed_url = urlparse(img_url)
+                file_ext = os.path.splitext(parsed_url.path)[1]
+                if not file_ext:
+                    file_ext = '.jpg'  # 기본값
             
             # 파일명 정리
             safe_name = re.sub(r'[^\w\-_\.]', '_', img_name)
@@ -79,8 +106,19 @@ class SeleniumWebScraper:
             # images 폴더 생성
             (folder_path / "images").mkdir(exist_ok=True)
             
+            # 이미지 데이터 저장
             with open(file_path, 'wb') as f:
-                f.write(response.content)
+                for chunk in response.iter_content(chunk_size=8192):
+                    if chunk:
+                        f.write(chunk)
+            
+            # 파일 크기 확인
+            file_size = os.path.getsize(file_path)
+            print(f"이미지 저장 완료: {file_path} (크기: {file_size} bytes)")
+            
+            if file_size == 0:
+                print(f"경고: 이미지 파일이 비어있습니다: {file_path}")
+                return None
             
             return str(file_path)
             
