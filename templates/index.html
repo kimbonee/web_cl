@@ -216,6 +216,27 @@
         .copy-btn:hover {
             background: #218838;
         }
+        
+        .options-group {
+            margin-top: 15px;
+        }
+        
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .checkbox-label input[type="checkbox"] {
+            margin-right: 8px;
+            transform: scale(1.2);
+        }
+        
+        .checkmark {
+            margin-left: 5px;
+        }
     </style>
 </head>
 <body>
@@ -230,6 +251,13 @@
                 <div class="input-group">
                     <input type="text" id="urlInput" class="url-input" placeholder="웹페이지 URL을 입력하세요 (예: https://example.com)" />
                     <button id="scrapeBtn" class="scrape-btn">불러오기</button>
+                </div>
+                <div class="options-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="useSelenium" />
+                        <span class="checkmark"></span>
+                        Selenium 사용 (연결 문제가 있는 사이트용)
+                    </label>
                 </div>
                 <div id="status" class="status hidden"></div>
             </div>
@@ -259,6 +287,7 @@
 
         scrapeBtn.addEventListener('click', async () => {
             const url = urlInput.value.trim();
+            const useSelenium = document.getElementById('useSelenium').checked;
             
             if (!url) {
                 showStatus('URL을 입력해주세요.', 'error');
@@ -268,7 +297,7 @@
             // UI 상태 변경
             scrapeBtn.disabled = true;
             scrapeBtn.innerHTML = '<span class="loading-spinner"></span>불러오는 중...';
-            showStatus('웹페이지를 불러오는 중...', 'loading');
+            showStatus(useSelenium ? 'Selenium으로 웹페이지를 불러오는 중...' : '웹페이지를 불러오는 중...', 'loading');
             
             // 결과 섹션 숨기기
             resultSection.classList.add('hidden');
@@ -280,7 +309,7 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ url: url })
+                    body: JSON.stringify({ url: url, use_selenium: useSelenium })
                 });
 
                 const data = await response.json();
